@@ -6,24 +6,44 @@ jQuery ->
     dataType: 'script'
     cache: true
 
+window.fbAsyncInit = ->
+  FB.init(appId: '187652384691875', channelUrl: '//backbone-friends.local/channel.html')
+
+  facebook_session = new FacebookSession()
+  facebook_session.updateLoginStatus()
+
   $('.fb-login').click (e) ->
     e.preventDefault()
-    console.log 'Logging in...'
-    FB.login (response) ->
-      if response.authResponse
-        window.loggedIn()
-      else
-        console.log 'User cancelled login or did not fully authorize.'
+    facebook_session.login()
 
-window.loggedIn = ->
-  FB.api '/me', (response) ->
-    $('.login-status').html('Welcome to backbone-friends, ' + response.name + '.')
+  $('.fb-logout').click (e) ->
+    e.preventDefault()
+    facebook_session.logout()
 
-window.fbAsyncInit = ->
-  FB.init(appId: '187652384691875', channelUrl: '//backbone-friends.local/channel.html',
-          cookie: true, status: true, xfbml: true, frictionlessRequests: true)
+FacebookSession = Backbone.Model.extend
+  _loginStatus: null
 
-  FB.getLoginStatus (response) ->
-    console.log 'Login Status: ' + response.status
-    if response.status == 'connected'
-      window.loggedIn()
+  initialize: ->
+    _.bindAll(this, 'onLoginStatusChange')
+    FB.Event.subscribe('auth.authResponseChange', this.onLoginStatusChange)
+
+  login: (callback) ->
+    console.log 'login'
+    if (typeof callback == 'undefined')
+      callback = ->
+    FB.login(callback)
+
+  logout: ->
+    console.log 'logout'
+    FB.logout()
+
+  updateLoginStatus: ->
+    FB.getLoginStatus(this.onLoginStatusChange)
+
+  onLoginStatusChange: (response) ->
+    console.log 'Login status changed to: '+ response.status
+    return false if this._loginStatus == response.status
+    this._loginStatus = response.status
+
+  isConnected: ->
+    return this._loginStatus == 'connected'
