@@ -12,16 +12,9 @@ window.fbAsyncInit = ->
   facebook_session = new FacebookSession()
   facebook_session.updateLoginStatus()
 
-  $('.fb-login').click (e) ->
-    e.preventDefault()
-    facebook_session.login()
-
-  $('.fb-logout').click (e) ->
-    e.preventDefault()
-    facebook_session.logout()
+  new LoginStatusView( el: $('#login-status'), model: facebook_session )
 
 FacebookSession = Backbone.Model.extend
-  _loginStatus: null
 
   initialize: ->
     _.bindAll(this, 'onLoginStatusChange')
@@ -43,7 +36,28 @@ FacebookSession = Backbone.Model.extend
   onLoginStatusChange: (response) ->
     console.log 'Login status changed to: '+ response.status
     return false if this._loginStatus == response.status
-    this._loginStatus = response.status
+    this.set('loginStatus', response.status)
 
   isConnected: ->
-    return this._loginStatus == 'connected'
+    return this.get('loginStatus') == 'connected'
+
+LoginStatusView = Backbone.View.extend
+  initialize: ->
+    _.bindAll(this, 'render')
+    this.model.bind 'change', this.render
+    this.render()
+
+  events:
+    'click .fb-login': 'login',
+    'click .fb-logout': 'logout'
+
+  login: ->
+    this.model.login()
+
+  logout: ->
+    this.model.logout()
+
+  render: ->
+    template_el = if this.model.isConnected() then $('#logged-out-template') else $('#logged-in-template')
+    $(this.el).html(_.template(template_el.html())({}))
+    this

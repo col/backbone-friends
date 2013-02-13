@@ -12,5 +12,9 @@
     %script(src="application.js")
   %body
     #login-status
+
+    %script#logged-in-template(type="text/html")
       %a.fb-login(href="#") Login
+
+    %script#logged-out-template(type="text/html")
       %a.fb-logout(href="#") Logout
