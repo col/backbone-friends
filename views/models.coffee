@@ -1,14 +1,16 @@
-@Friend = Backbone.Model.extend
+FriendsApp.Models.Friend = Backbone.Model.extend
   defaults:
     uid: null,
     name: null,
     picture: null
 
 
-@Friends = Backbone.Collection.extend
-  model: Friend
+FriendsApp.Collections.Friends = Backbone.Collection.extend
+  model: FriendsApp.Models.Friend
+
   initialize: (options)->
     this.session = options.session
+
   sync: (method, model, options) ->
     return unless this.session.isConnected()
     FB.api "/me/friends?access_token=#{this.session.get('accessToken')}", (response) ->
@@ -16,7 +18,7 @@
         options.success(model, response.data, options)
 
 
-@FacebookSession = Backbone.Model.extend
+FriendsApp.Models.FacebookSession = Backbone.Model.extend
 
   initialize: ->
     _.bindAll(this, 'onLoginStatusChange')
