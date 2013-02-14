@@ -19,7 +19,3 @@ end
 get '/views.js' do
   coffee :views
 end
-
-get '/routers.js' do
-  coffee :routers
-end

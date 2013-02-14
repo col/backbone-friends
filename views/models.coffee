@@ -4,6 +4,14 @@ FriendsApp.Models.Friend = Backbone.Model.extend
     name: null,
     picture: null
 
+  picture_url: ->
+    pic = this.get('picture')
+    if pic then pic.data.url else ''
+
+  toggleSelected: ->
+    value = if this.get('selected') then !this.get('selected') else true
+    this.set('selected', value)
+
 
 FriendsApp.Collections.Friends = Backbone.Collection.extend
   model: FriendsApp.Models.Friend
@@ -13,13 +21,11 @@ FriendsApp.Collections.Friends = Backbone.Collection.extend
 
   sync: (method, model, options) ->
     return unless this.session.isConnected()
-    FB.api "/me/friends?access_token=#{this.session.get('accessToken')}", (response) ->
+    FB.api "/me/friends?fields=name,picture&access_token=#{this.session.get('accessToken')}", (response) ->
       if options.success
         options.success(model, response.data, options)
 
-
 FriendsApp.Models.FacebookSession = Backbone.Model.extend
-
   initialize: ->
     _.bindAll(this, 'onLoginStatusChange')
     FB.Event.subscribe('auth.authResponseChange', this.onLoginStatusChange)
@@ -42,10 +48,10 @@ FriendsApp.Models.FacebookSession = Backbone.Model.extend
 
     accessToken = if response.authResponse then response.authResponse.accessToken else null
     this.set('accessToken', accessToken)
-    console.log 'Access Token changed to: ' + this.get('accessToken')
-
     this.set('loginStatus', response.status)
-    console.log 'Login status changed to: ' + this.get('loginStatus')
+
+    event = if response.status == 'connected' then 'facebook:connected' else 'facebook:disconnected'
+    this.trigger(event, this, response)
 
   isConnected: ->
     return this.get('loginStatus') == 'connected'

@@ -1,28 +1,37 @@
-FriendsApp.Views.AppView = Backbone.View.extend
-  el: $('#backbone-friends-app')
+FriendsApp.Views.FriendsIndex = Backbone.View.extend
+  id: 'friends-list'
 
   initialize: ->
-    this.session = new FacebookSession()
-    this.friends = new Friends(session: this.session)
-    new FriendsApp.Views.LoginStatusView(el: $('#login-status'), model: this.session)
-    _.bindAll(this, 'render', 'loadFriends', 'addFriend', 'addAll')
-    this.friends.bind 'add', this.addFriend
-    this.friends.bind 'refresh', this.addAll
-    this.session.bind 'change:loginStatus', this.loadFriends
-    this.session.updateLoginStatus()
-
-  loadFriends: ->
-    this.friends.fetch(silent: false)
-
-  addFriend: (friend) ->
-    console.log 'addFriend here...'
-    console.log friend
-
-  addAll: ->
-    console.log 'addAll here...'
+    _.bindAll(this, 'render')
+    this.template = _.template($('#friends-template').html())
+    this.collection.bind 'reset', this.render
 
   render: ->
-    console.log 'app render - not yet implemented'
+    self = this
+    $(this.el).html(this.template())
+    this.collection.each (friend) ->
+      friendView = new FriendsApp.Views.FriendView(model: friend)
+      self.$('ul').append(friendView.render().el)
+    this
+
+
+FriendsApp.Views.FriendView = Backbone.View.extend
+  tagName: 'li'
+
+  initialize: ->
+    _.bindAll this, 'render'
+    this.template = _.template($('#friend-template').html())
+    this.model.bind 'change', this.render
+
+  events:
+    'click': 'clicked'
+
+  clicked: ->
+    this.model.toggleSelected()
+
+  render: ->
+    $(this.el).html(this.template(friend: this.model))
+    this
 
 
 FriendsApp.Views.LoginStatusView = Backbone.View.extend
@@ -45,14 +54,3 @@ FriendsApp.Views.LoginStatusView = Backbone.View.extend
     template_el = if this.model.isConnected() then $('#logged-out-template') else $('#logged-in-template')
     $(this.el).html(_.template(template_el.html())({}))
     this
-
-
-#FriendView = Backbone.View.extend
-#  className: 'friend'
-#  tagName: 'li'
-#  initialize: ->
-#    this.template = _.template($('#friend-template').html())
-#    _.bindAll(this, 'render')
-#  render: ->
-#    $(this.el).html(this.template(this.model.toJSON()))
-#    this

@@ -12,15 +12,24 @@
     %script(src="friends_app.js")
     %script(src="models.js")
     %script(src="views.js")
-    %script(src="routers.js")
     %script(src="application.js")
 
   %body
-    #backbone-friends-app
+    #friends-app
       #login-status
+      #friends-list
 
     %script#logged-in-template(type="text/html")
       %a.fb-login(href="#") Login
 
     %script#logged-out-template(type="text/html")
       %a.fb-logout(href="#") Logout
+
+    %script#friends-template(type="text/html")
+      %h1 Friends
+      %ul.friends
+
+    %script#friend-template(type="text/html")
+      <img src="<%= friend.picture_url() %>" />
+      <%= friend.get('name') %>
+      <%= friend.get('selected') %>
